@@ -1,12 +1,46 @@
 <script>
   import Pica from "pica";
+  import heic2any from "heic2any";
 
   let imageFile;
   const pica = Pica();
   let width = 200;
   let height = 200;
 
+  async function convertHEICToJPEG(file) {
+    try {
+      const convertedBlob = await heic2any({
+        blob: file,
+        toType: "image/jpeg",
+      });
+      return convertedBlob;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  }
+
+  async function handleFileChange(e) {
+    let file = e.target.files[0];
+
+    if (file.type === "image/heic") {
+      const convertedBlob = await convertHEICToJPEG(file);
+      if (convertedBlob) {
+        file = new File([convertedBlob], "converted.jpeg", {
+          type: "image/jpeg",
+        });
+      }
+    }
+
+    imageFile = file;
+    resizeImage();
+  }
+
   async function resizeImage() {
+    if (!imageFile) {
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = async (e) => {
       const img = new Image();
@@ -30,7 +64,7 @@
 </script>
 
 <div class="container">
-  <input type="file" on:change={(e) => (imageFile = e.target.files[0])} />
+  <input type="file" on:change={handleFileChange} />
   <div>
     <label for="width">幅:</label>
     <input type="number" id="width" bind:value={width} min="0" />
